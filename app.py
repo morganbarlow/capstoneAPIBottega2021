@@ -1,8 +1,8 @@
-import flask from Flask, jsonify, request
-import flask-marshmallow from Marshmallow
-import flask-sqlalchemy from SQLAlchemy
-import flask-heroku from Heroku
-import flask-cors from cors
+from flask import Flask, jsonify, request
+from flask_marshmallow import Marshmallow
+from flask_sqlalchemy import SQLAlchemy
+from flask_heroku import Heroku
+from flask_cors import CORS
 import os
 
 app = Flask(__name__)
@@ -14,7 +14,7 @@ CORS(app)
 
 class User(db.Model): 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True, nullable=false)
+    username = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
     def __init__ (self, username, password):
         self.username = username
@@ -42,7 +42,7 @@ class Appointment(db.Model):
         self.hour = hour
         self.minute = minute
 
-class AppointmentSchema(db.Schema):
+class AppointmentSchema(ma.Schema):
     class Meta: 
         feilds = ("id", "text", "date", "month_id", "hour", "minute")
 
@@ -72,7 +72,12 @@ def get_user_all():
 
 @app.route("/user/get/<id>", methods = ["GET"])
 def get_user_by_id(id):
-    user = db.session.query.(User).filter(User.id = id).first()
+    user = db.session.query(User).filter(User.id == id).first()
+    return jsonify(user_schema.dumb(user))
+
+@app.route("/user/get/<username>", methods = ["GET"])
+def get_user_by_username(month):
+    user = db.session.query(User).filter(User.username == username).first()
     return jsonify(user_schema.dumb(user))
 
 @app.route("/multiple/user/add", methods = ["POST"])
