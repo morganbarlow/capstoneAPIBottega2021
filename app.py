@@ -13,20 +13,21 @@ ma = Marshmallow(app)
 heroku = Heroku(app)
 CORS(app)
 
-class User(db.Model): 
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
-    def __init__ (self, username, password):
+    def __init__(self, username, password):
         self.username = username
         self.password = password
 
-class UserSchema (ma.Schema):
+class UserSchema(ma.Schema):
     class Meta:
-        feilds = ("id", "username", "password")
+        fields = ("id", "username", "password")
 
 user_schema = UserSchema()
 many_user_schema = UserSchema(many=True)
+
 
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -45,11 +46,12 @@ class Appointment(db.Model):
 
 class AppointmentSchema(ma.Schema):
     class Meta: 
-        feilds = ("id", "text", "date", "month_id", "hour", "minute")
-
+        feilds = ('id', 'text', 'date', 'month_id', 'hour', 'minute')
 
 appointment_schema = AppointmentSchema()
-many_appointment_schema = AppointmentSchema(many=True)
+multiple_appointment_schema = AppointmentSchema(many=True)
+
+
 
 @app.route("/user/add", methods = ["POST"])
 def add_user():
@@ -99,12 +101,13 @@ def delete_user(id):
     db.session.commit()
     return jsonify ("User has been deleted")
 
-@app.route("/appointment/add", methods = ["POST"])
-def add_appointment():
-    if request.content_type != "application/json":
-        return("Error: Data must be sent as JSON")
 
-    post_data = request.get_json() 
+@app.route("/appointment/add", methods=["POST"])
+def add_appointment() :
+    if request.content_type != "application/json":
+        return jsonify("Error: Data must be sent as JSON")
+    
+    post_data = request.get_json()
     text = post_data.get("text")
     date = post_data.get("date")
     month_id = post_data.get("month_id")
@@ -117,56 +120,54 @@ def add_appointment():
 
     return jsonify("Appointment has been added")
 
-@app.route("/appointment/get", methods = ["GET"])
-def get_appointment_all():
+
+@app.route("/appointment/get", methods=["GET"])
+def get_all_appointment():
     all_appointments = db.session.query(Appointment).all()
-    return jsonify(many_appointment_schema.dump(all_appointments))
+    return jsonify(multiple_appointment_schema.dump(all_appointments))
+
 
 @app.route("/appointment/get/<id>", methods = ["GET"])
 def get_appointment_by_id(id):
-    appointment = db.session.query(Appointment).filter(Appoinment.id == id).first()
+    appointment = db.session.query(Appointment).filter(Appointment.id == id).first()
+    return jsonify(appointment_schema.dump(user))
+
+
+@app.route("/appointment/get/title/<title>", methods = ["GET"])
+def get_appointment_by_title(username):
+    appointment = db.session.query(Appointment).filter(Appointment.title == title).first()
     return jsonify(appointment_schema.dump(appointment))
 
-@app.route("/appointment/update/<id>", methods = ["PUT"])
-def update_appointment(id):
-    appointment_update = db.session.query(Appointment).filter(Appointment.id == id).first()
-    if appointment_update is None:
-        return jsonify(f'ERROR: No appointment with ID:${id} exists.')
+
+@app.route("/appointment/update/<id>", methods=["PUT"])
+def update_appointment_by_id(id):
+    if request.content_type != "application/json":
+        return jsonify("Data wasn't sent as JSON")
 
     put_data = request.get_json()
-    new_text = put_data.get("text")
-    new_date = put_data.get("date")
-    new_month_id = put_data.get("month_id")
-    new_hour = put_data.get("hour")
-    new_minute = put_data.get("minute")
+    text = put_data.get("text")
+    date = put_data.get("date")
+    month_id = put_data.get("month_id")
+    hour = put_data.get("hour")
+    minute = put_data.get("minute")
 
-    if new_text == "" :
-        return ("Text cannot be blank")
-    if new_date == "" :
-        return ("Date cannot be blank")
-    if new_month_id == "" :
-        return ("Month cannot be blank")
-    if new_hour == "" :
-        return ("Hour cannot be blank")
-    if new_minute == "" :
-        return ("Minute cannot be blank")
+    record = db.session.query(Appointment).filter(Appointment.id == id).first()
 
-    Appointment.text = new_text
-    Appointment.date = new_date
-    Appointment.month_id = new_month_id
-    Appointment.hour = new_hour
-    Appointment.minute = new_minute
+    if record is None:
+        return jsonify(f"ERROR: Book with id of {id} doesn't exist")
+    if text is None: 
+        record.text = text
+    if date is None: 
+        record.date = date
+    if month_id is None: 
+        record.month_id = month_id
+    if hour is None: 
+        record.hour = hour
+    if minute is None: 
+        record.minute = minute
+
+    db.session.add()
     db.session.commit()
-
-    return jsonify("Appointment has been updated")
-
-@app.route("/appointment/delete/<id>", methods = ["DELETE"])
-def delete_appointment_by_id(id):
-    appointment_delete = db.session.query(Appointment).filter(Appointment.id == id).first()
-    db.session.delete(appointment)
-    db.session.commit
-    return jsonify("Appointment has been deleted")
-
 
 if __name__ == "__main__":
     app.run(debug=True)
