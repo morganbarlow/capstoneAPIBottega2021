@@ -8,6 +8,7 @@ import os
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 
+
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 heroku = Heroku(app)
@@ -35,23 +36,19 @@ class Month(db.Model):
     start_day = db.Column(db.Integer, nullable=False)
     days_in_month = db.Column(db.Integer, nullable=False)
     days_in_previous_month = db.Column(db.Integer, nullable=False)
-    year = db.Column(db.Integer, nullable=False),
-    hour = db.Column(db.Integer, nullable=False),
-    minute = db.Column(db.Integer, nullable=False)
+    year = db.Column(db.Integer, nullable=False)
 
-    def __init__(self,name,start_day,days_in_month,days_in_previous_month,year,hour,minute):
+    def __init__(self,name,start_day,days_in_month,days_in_previous_month,year):
         self.name = name
         self.start_day = start_day
         self.days_in_month = days_in_month
         self.days_in_previous_month = days_in_previous_month
         self.year = year
-        self.hour = hour
-        self.minute = minute
 
 
 class MonthSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'name', 'start_day', 'days_in_month', 'days_in_previous_month', 'year', 'hour', 'minute')
+        fields = ('id', 'name', 'start_day', 'days_in_month', 'days_in_previous_month', 'year')
 
 month_schema = MonthSchema ()
 multiple_month_schema = MonthSchema(many=True)
@@ -64,7 +61,7 @@ class Appointment(db.Model):
     hour = db.Column(db.Integer, nullable= False)
     minute = db.Column(db.Integer, nullable=False)
 
-    def __init__(self,text,date,month_id):
+    def __init__(self,text,date,month_id,hour,minute):
         self.text = text
         self.date = date
         self.month_id = month_id
@@ -138,10 +135,8 @@ def add_month():
     days_in_month = post_data.get("days_in_month")
     days_in_previous_month = post_data.get("days_in_previous_month")
     year = post_data.get("year")
-    hour = post_data.get("hour")
-    minute = post_data.get("minute")
 
-    record = Month(name,start_day,days_in_month,days_in_previous_month, year, hour, minute)
+    record = Month(name,start_day,days_in_month,days_in_previous_month, year)
     db.session.add(record)
     db.session.commit()
 
@@ -155,7 +150,7 @@ def add_multiple_months():
     post_data = request.get_json()
     data = post_data.get('data')
     for month in data:
-        record = Month(month["name"], month["start_day"], month["days_in_month"], month["days_in_previous_month"], month["year"], month["hour"], month["minute"])
+        record = Month(month["name"], month["start_day"], month["days_in_month"], month["days_in_previous_month"], month["year"])
         db.session.add(record)
 
     db.session.commit()
@@ -187,7 +182,7 @@ def add_appointment():
     hour = post_data.get("hour")
     minute = post_data.get("minute")
     
-    record = Appointment(text, date, month_id, hour, minute)
+    record = Appointment(text, date, month_id)
     db.session.add(record)
     db.session.commit()
 
